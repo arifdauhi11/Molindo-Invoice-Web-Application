@@ -1,0 +1,89 @@
+CREATE VIEW tagihan AS
+SELECT t_tagihan2.id_tagihan, karyawan.id AS id_karyawan, t_pelanggan.id_pelanggan, t_tagihan2.kd_tagihan,t_pelanggan.nama_pelanggan, t_pelanggan.alamat_pelanggan, t_pelanggan.status_pelanggan, karyawan.nama_user, t_tagihan2.tagihan, t_tagihan2.iuran,t_tagihan2.periode, t_tagihan2.tgl_tagihan, t_tagihan2.bulan_tagihan,t_tagihan2.tahun_tagihan, t_tagihan2.tahun_pembuatan, t_tagihan2.status_tagihan, t_tagihan2.jumlah_cetak, t_tagihan2.nama_invoice, t_tagihan2.jumlah_download, t_tagihan2.jumlah_kirim, t_tagihan2.bukti_transfer
+FROM `t_tagihan2`
+INNER JOIN t_pelanggan ON t_pelanggan.id_pelanggan = t_tagihan2.id_pelanggan
+INNER JOIN karyawan ON karyawan.id = t_tagihan2.id_karyawan
+
+CREATE VIEW user AS
+SELECT t_user.id_user, t_role.id_role, t_user.nama_user, t_user.username, t_user.password, t_role.role, t_user.status, t_foto_profil.id_foto_profil, t_foto_profil.foto_profil FROM `t_user` 
+INNER JOIN t_role ON t_role.id_role = t_user.id_role
+INNER JOIN t_foto_profil ON t_foto_profil.id_user = t_user.id_user
+
+CREATE VIEW finance AS
+SELECT t_finance.id_finance, t_user.id_user, t_user.id_role,t_user.nama_user, t_foto_profil.foto_profil, t_finance.signature FROM `t_finance`
+INNER JOIN t_user ON t_user.id_user = t_finance.id_user
+INNER JOIN t_foto_profil ON t_user.id_user = t_foto_profil.id_user
+
+
+CREATE VIEW kolektor AS
+SELECT t_kolektor.id_kolektor, t_user.id_user, t_user.id_role,t_user.nama_user, t_foto_profil.foto_profil, t_kolektor.signature FROM `t_kolektor`
+INNER JOIN t_user ON t_user.id_user = t_kolektor.id_user
+INNER JOIN t_foto_profil ON t_user.id_user = t_foto_profil.id_user
+
+CREATE VIEW customer_service AS
+SELECT t_customer_service.id_customer_service, t_user.id_user, t_user.id_role,t_user.nama_user, t_foto_profil.foto_profil, t_customer_service.signature FROM `t_customer_service`
+INNER JOIN t_user ON t_user.id_user = t_customer_service.id_user
+INNER JOIN t_foto_profil ON t_user.id_user = t_foto_profil.id_user
+
+CREATE VIEW log AS
+SELECT t_log.id_log, t_user.id_user, t_role.id_role, t_user.nama_user, t_user.username, t_role.role, t_log.aksi, t_log.waktu FROM `t_log`
+LEFT JOIN t_user ON t_user.id_user = t_log.id_user
+INNER JOIN t_role ON t_role.id_role = t_user.id_role
+
+CREATE VIEW karyawan AS
+SELECT t_kolektor.id_kolektor AS id, t_kolektor.id_user, t_foto_profil.id_foto_profil, t_foto_profil.foto_profil,t_kolektor.signature,t_user.nama_user  FROM `t_kolektor`
+INNER JOIN t_user ON t_user.id_user = t_kolektor.id_user
+INNER JOIN t_foto_profil ON t_foto_profil.id_user = t_kolektor.id_user
+UNION
+SELECT t_finance.id_finance AS id, t_finance.id_user, t_foto_profil.id_foto_profil, t_foto_profil.foto_profil,t_finance.signature, t_user.nama_user  FROM `t_finance`
+INNER JOIN t_user ON t_user.id_user = t_finance.id_user
+INNER JOIN t_foto_profil ON t_foto_profil.id_user = t_finance.id_user
+UNION
+SELECT t_customer_service.id_customer_service AS id, t_customer_service.id_user, t_foto_profil.id_foto_profil, t_foto_profil.foto_profil,t_customer_service.signature, t_user.nama_user  FROM `t_customer_service`
+INNER JOIN t_user ON t_user.id_user = t_customer_service.id_user
+INNER JOIN t_foto_profil ON t_foto_profil.id_user = t_customer_service.id_user
+
+
+CREATE VIEW pemasukkan AS 
+SELECT t_anggaran.id_anggaran, t_anggaran.anggaran, t_anggaran.masuk, t_anggaran.bulan, t_anggaran.tahun_anggaran, t_anggaran.bukti_kwitansi, t_anggaran.tahap
+FROM `t_anggaran` 
+WHERE t_anggaran.masuk != "NULL"
+
+CREATE VIEW pengeluaran AS 
+SELECT t_anggaran.id_anggaran, t_anggaran.id_biaya, t_anggaran.anggaran, t_anggaran.terpakai, t_anggaran.keluar, t_anggaran.bulan, t_anggaran.tahun_anggaran, t_anggaran.takteranggarkan, t_anggaran.tahap 
+FROM `t_anggaran` 
+WHERE t_anggaran.keluar != "NULL"
+
+die;
+		$invoice1 = "M2N-GTO".date('Y')."INV.";
+		$invoice2 = $this->input->post("invoice2");
+		$invoice3 = $this->input->post("invoice3");
+		$id = $this->input->post("idPL");
+		$nama = $this->input->post("namaPL");
+		$alamat = $this->input->post("alamatPL");
+		$tagihan2= $this->input->post("tagihan");
+		$terbilang = $this->input->post("terbilang");
+		$bu[] = $this->input->post("bulan");		
+		$status = $this->input->post("radioPL");
+		// instantiate and use the dompdf class
+		$dompdf = new Dompdf();
+		$data["tagihan"] = $this->db->get_where('tagihan',["id_tagihan" => 'TG0001'])->row();
+		$data["inv"] = array(
+			'kode' => $invoice1.$invoice2."-".$invoice3,
+			'nama' => $nama,
+			'tagih' => $tagihan2,
+			'bilang' => $terbilang,
+			'periode' => $bu
+		);
+		$data["setting"] = $this->db->get_where('t_pengaturan',["id_pengaturan" => '1'])->row();
+		$html = $this->load->view('invoice', $data, TRUE);
+		$dompdf->loadHtml($html);
+
+		// (Optional) Setup the paper size and orientation
+		$dompdf->setPaper('A4', 'portrait');
+
+		// Render the HTML as PDF
+		$dompdf->render();
+
+		// Output the generated PDF to Browser
+		$dompdf->stream('Invoice'.'.pdf', array("Attachment" => FALSE));
